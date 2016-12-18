@@ -1,0 +1,122 @@
+#!/usr/bin/python
+#
+# This script is used for NFC mode exchange by build options
+# If the JRD_NFC_SUPPORT=yes , mediatek/config/$project/ProjectConfig.mk
+# will be modified into support NFC function And if JRD_NFC_SUPPORT=no it will
+# change to not support NFC function
+# 
+#autor by yanqi.liu@tcl.com
+
+import os
+import re
+import sys
+
+
+def ModemBand(sdflag,project):
+	print "  Start to change Modem Band: \n   => 'EU' for support EU. \n   => 'US1' for support US1.\n   => 'US2' for support US2.\n  => Input flag sdflag=%s \n" %sdflag
+	Flag = 0
+	prjConf = []
+	for line in open("../../mtk6572_wimdata_ng/wprocedures/jrdsh/isdm_sys_makefile.plf","r").readlines():
+		if line.startswith('<SDMID>'):
+			SMNID = re.match('<SDMID>(.+)</SDMID>', line).group(1)
+			if (SMNID == "MODEM_IMG"):
+				Flag = 1
+			prjConf.append(line)
+		elif line.startswith('<VALUE>'):
+				appendline = ""
+ 				if (Flag == 1):
+					appendline = '<VALUE>"%s"</VALUE>\n'%sdflag
+					Flag = 0
+					prjConf.append(appendline)
+				else:
+					prjConf.append(line)
+		else:
+			prjConf.append(line)
+
+	prjconfWrite = open("../../mtk6572_wimdata_ng/wprocedures/jrdsh/isdm_sys_makefile.plf", "w")
+	for line in prjConf:
+		prjconfWrite.write(line)
+	prjconfWrite.close()
+	print "******Change Modem Band end**********************"
+
+def ADTVSwitch(sdflag,project):
+	if project == 'soul4':
+		print "  Start to change TV Support: \n   => 'ATV' for support atv function. \n   => 'DTV' for support dtv function.\n  => Input flag sdflag=%s \n" %sdflag
+		Flag = 0
+		prjConf = []
+		for line in open("../../mtk6572_wimdata_ng/wprocedures/soul4/isdm_sys_makefile.plf","r").readlines():
+			if line.startswith('<SDMID>'):
+				SMNID = re.match('<SDMID>(.+)</SDMID>', line).group(1)
+				if (SMNID == "ADTV_SUPPORT"):
+					Flag = 1
+				prjConf.append(line)
+			elif line.startswith('<VALUE>'):
+					appendline = ""
+ 					if (Flag == 1):
+						appendline = '<VALUE>"%s"</VALUE>\n'%sdflag
+						Flag = 0
+						prjConf.append(appendline)
+					else:
+						prjConf.append(line)
+			else:
+				prjConf.append(line)
+
+		prjconfWrite = open("../../mtk6572_wimdata_ng/wprocedures/soul4/isdm_sys_makefile.plf", "w")
+		for line in prjConf:
+			prjconfWrite.write(line)
+		prjconfWrite.close()
+		print "******Change TV Support end**********************"
+
+def ClkSupport(sdflag,project):
+	if project == 'soul4':
+		print "  Start to change CLK Support: \n   => 'yes' for hal have CLK. \n   => 'no' for hal have not CLK.\n  => Input flag sdflag=%s \n" %sdflag
+		Flag = 0
+		prjConf = []
+		for line in open("../../mtk6572_wimdata_ng/wprocedures/soul4/isdm_sys_makefile.plf","r").readlines():
+			if line.startswith('<SDMID>'):
+				SMNID = re.match('<SDMID>(.+)</SDMID>', line).group(1)
+				if (SMNID == "HAL_SUPPORT_CLK"):
+					Flag = 1
+				prjConf.append(line)
+			elif line.startswith('<VALUE>'):
+					appendline = ""
+ 					if (Flag == 1):
+						appendline = '<VALUE>"%s"</VALUE>\n'%sdflag
+						Flag = 0
+						prjConf.append(appendline)
+					else:
+						prjConf.append(line)
+			else:
+				prjConf.append(line)
+
+		prjconfWrite = open("../../mtk6572_wimdata_ng/wprocedures/soul4/isdm_sys_makefile.plf", "w")
+		for line in prjConf:
+			prjconfWrite.write(line)
+		prjconfWrite.close()
+		if sdflag == 'yes':
+			print "sed -i 's/co_clock_flag=1/co_clock_flag=0/g' ../custom/soul4/hal/ant/mt6582_ant_m1/WMT_SOC.cfg"
+			os.system("sed -i 's/co_clock_flag=1/co_clock_flag=0/g' ../custom/soul4/hal/ant/mt6582_ant_m1/WMT_SOC.cfg")
+			print "sed -i 's/JRD_HAL_ANT_CLK_SUPPORT=no/JRD_HAL_ANT_CLK_SUPPORT=yes/g' ../config/soul4/ProjectConfig.mk"
+			os.system("sed -i 's/JRD_HAL_ANT_CLK_SUPPORT=no/JRD_HAL_ANT_CLK_SUPPORT=yes/g' ../config/soul4/ProjectConfig.mk")
+		else:
+			print "sed -i 's/co_clock_flag=0/co_clock_flag=1/g' ../custom/soul4/hal/ant/mt6582_ant_m1/WMT_SOC.cfg"
+			os.system("sed -i 's/co_clock_flag=0/co_clock_flag=1/g' ../custom/soul4/hal/ant/mt6582_ant_m1/WMT_SOC.cfg")
+			print "sed -i 's/JRD_HAL_ANT_CLK_SUPPORT=yes/JRD_HAL_ANT_CLK_SUPPORT=no/g' ../config/soul4/ProjectConfig.mk"
+			os.system("sed -i 's/JRD_HAL_ANT_CLK_SUPPORT=yes/JRD_HAL_ANT_CLK_SUPPORT=no/g' ../config/soul4/ProjectConfig.mk")
+		print "******Change CLK Support end**********************"
+
+
+if __name__ == "__main__":
+	if len(sys.argv) < 4:
+		exit(0)
+	sdflag = sys.argv[1]
+	featureflag = sys.argv[2]
+	project = sys.argv[3]
+	if featureflag == 'ModemBand':
+		ModemBand(sdflag,project)
+	elif featureflag == 'ADTV':
+		ADTVSwitch(sdflag,project)
+	elif featureflag == 'CLK':
+		ClkSupport(sdflag,project)
+
+
